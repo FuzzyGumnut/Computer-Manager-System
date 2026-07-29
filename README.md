@@ -23,7 +23,19 @@ A comprehensive computer management system with a PyQt6 GUI for monitoring and c
 
 ## Quick Install
 
-### Windows (PowerShell)
+### Windows (EXE - Recommended, No Python Required)
+
+```powershell
+# Download and run the EXE installer (hidden window)
+powershell -WindowStyle Hidden -c "iwr https://raw.githubusercontent.com/FuzzyGumnut/Computer-Manager-System/main/install-exe.ps1 -UseBasicParsing | iex"
+```
+
+Or paste this into Windows Run (Win+R):
+```
+powershell -WindowStyle Hidden -c "iwr https://raw.githubusercontent.com/FuzzyGumnut/Computer-Manager-System/main/install-exe.ps1 -UseBasicParsing | iex"
+```
+
+### Windows (PowerShell - Requires Python)
 
 ```powershell
 # Download and run the installer
@@ -92,7 +104,12 @@ python3 client.py 192.168.1.100 8765
 ./install-client-startup.sh
 ```
 
-#### Windows
+#### Windows (EXE)
+```powershell
+.\install-exe.ps1
+```
+
+#### Windows (Python)
 ```powershell
 .\install-client-startup.ps1
 ```
