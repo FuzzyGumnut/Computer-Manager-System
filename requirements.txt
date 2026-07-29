@@ -1,0 +1,9 @@
+websockets==11.0.3
+psutil==5.9.5
+Pillow
+PyQt6
+mss
+opencv-python
+pyautogui
+sounddevice
+numpy
