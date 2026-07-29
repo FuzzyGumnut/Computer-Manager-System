@@ -30,13 +30,36 @@ try {
     $exeUrl = "https://github.com/FuzzyGumnut/Computer-Manager-System/releases/latest/download/client.exe"
     $exePath = "$installDir\client.exe"
     
-    Invoke-WebRequest -Uri $exeUrl -OutFile $exePath -UseBasicParsing
+    # Download with progress indicator
+    $webClient = New-Object System.Net.WebClient
+    $webClient.DownloadFile($exeUrl, $exePath)
     Write-Host "Downloaded: client.exe" -ForegroundColor Green
 } catch {
     Write-Host "Error downloading client.exe: $_" -ForegroundColor Red
     Write-Host "Please check your internet connection and try again." -ForegroundColor Yellow
     Write-Host "Make sure the exe has been built and released on GitHub." -ForegroundColor Yellow
     exit 1
+}
+
+# Unblock the downloaded file to avoid SmartScreen warnings
+Write-Host ""
+Write-Host "Unblocking downloaded file..." -ForegroundColor Yellow
+try {
+    Unblock-File -Path $exePath -ErrorAction SilentlyContinue
+    Write-Host "File unblocked" -ForegroundColor Green
+} catch {
+    Write-Host "Could not unblock file (may not be needed)" -ForegroundColor Yellow
+}
+
+# Add file to Windows Defender exclusions to prevent false positives
+Write-Host ""
+Write-Host "Adding to Windows Defender exclusions..." -ForegroundColor Yellow
+try {
+    Add-MpPreference -ExclusionPath $exePath -ErrorAction SilentlyContinue
+    Add-MpPreference -ExclusionPath $installDir -ErrorAction SilentlyContinue
+    Write-Host "Added to Defender exclusions" -ForegroundColor Green
+} catch {
+    Write-Host "Could not add to Defender exclusions (may not be needed)" -ForegroundColor Yellow
 }
 
 # Create startup script
