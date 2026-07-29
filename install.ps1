@@ -13,6 +13,36 @@ if (-not $isAdmin) {
     exit 1
 }
 
+# Check if Python is installed
+Write-Host "Checking for Python installation..." -ForegroundColor Yellow
+try {
+    $pythonVersion = python --version 2>&1
+    Write-Host "Python found: $pythonVersion" -ForegroundColor Green
+} catch {
+    Write-Host "Python not found!" -ForegroundColor Red
+    Write-Host "Please install Python 3.8+ from https://www.python.org/downloads/" -ForegroundColor Yellow
+    Write-Host "During installation, make sure to check 'Add Python to PATH'" -ForegroundColor Yellow
+    Write-Host ""
+    Write-Host "Press any key to exit..."
+    $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
+    exit 1
+}
+
+# Check if pip is available
+Write-Host "Checking for pip..." -ForegroundColor Yellow
+try {
+    $pipVersion = pip --version 2>&1
+    Write-Host "pip found: $pipVersion" -ForegroundColor Green
+} catch {
+    Write-Host "pip not found!" -ForegroundColor Red
+    Write-Host "Python installation appears to be incomplete." -ForegroundColor Yellow
+    Write-Host "Please reinstall Python with pip included." -ForegroundColor Yellow
+    Write-Host ""
+    Write-Host "Press any key to exit..."
+    $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
+    exit 1
+}
+
 # Set installation directory
 $installDir = "$env:USERPROFILE\computer-manager"
 Write-Host "Installation directory: $installDir" -ForegroundColor Yellow
@@ -23,26 +53,22 @@ if (-not (Test-Path $installDir)) {
     Write-Host "Created installation directory" -ForegroundColor Green
 }
 
-# Download files (in production, this would download from GitHub)
-# For now, we'll assume files are already in the current directory
-$scriptDir = $PSScriptRoot
-Write-Host "Copying files from: $scriptDir" -ForegroundColor Yellow
-
-# Copy all necessary files
-$filesToCopy = @(
-    "client.py",
-    "requirements.txt"
-)
-
-foreach ($file in $filesToCopy) {
-    $sourceFile = Join-Path $scriptDir $file
-    $destFile = Join-Path $installDir $file
-    if (Test-Path $sourceFile) {
-        Copy-Item $sourceFile $destFile -Force
-        Write-Host "Copied: $file" -ForegroundColor Green
-    } else {
-        Write-Host "Warning: $file not found in source directory" -ForegroundColor Yellow
-    }
+# Download files from GitHub
+Write-Host ""
+Write-Host "Downloading files from GitHub..." -ForegroundColor Yellow
+try {
+    $clientUrl = "https://raw.githubusercontent.com/FuzzyGumnut/Computer-Manager-System/main/client.py"
+    $requirementsUrl = "https://raw.githubusercontent.com/FuzzyGumnut/Computer-Manager-System/main/requirements.txt"
+    
+    Invoke-WebRequest -Uri $clientUrl -OutFile "$installDir\client.py" -UseBasicParsing
+    Write-Host "Downloaded: client.py" -ForegroundColor Green
+    
+    Invoke-WebRequest -Uri $requirementsUrl -OutFile "$installDir\requirements.txt" -UseBasicParsing
+    Write-Host "Downloaded: requirements.txt" -ForegroundColor Green
+} catch {
+    Write-Host "Error downloading files: $_" -ForegroundColor Red
+    Write-Host "Please check your internet connection and try again." -ForegroundColor Yellow
+    exit 1
 }
 
 # Install Python dependencies
@@ -53,7 +79,11 @@ try {
     Write-Host "Dependencies installed successfully" -ForegroundColor Green
 } catch {
     Write-Host "Error installing dependencies: $_" -ForegroundColor Red
-    exit 1
+    Write-Host "Some dependencies may have failed to install." -ForegroundColor Yellow
+    Write-Host "The client may not function correctly." -ForegroundColor Yellow
+    Write-Host ""
+    Write-Host "Press any key to continue anyway or Ctrl+C to cancel..."
+    $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
 }
 
 # Create startup script
