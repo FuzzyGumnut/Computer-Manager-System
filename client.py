@@ -15,6 +15,7 @@ import sounddevice as sd
 import numpy as np
 import subprocess
 import sys
+import urllib.request
 
 import logging
 import uuid
@@ -411,14 +412,35 @@ class ComputerClientAgent:
                 await asyncio.sleep(3)
 
 
+def get_server_ip_from_github():
+    """Fetch server IP from GitHub clientip.txt file"""
+    try:
+        url = "https://raw.githubusercontent.com/FuzzyGumnut/Computer-Manager-System/main/clientip.txt"
+        response = urllib.request.urlopen(url, timeout=5)
+        ip = response.read().decode('utf-8').strip()
+        if ip:
+            print(f"Fetched server IP from GitHub: {ip}")
+            return ip
+    except Exception as e:
+        print(f"Failed to fetch IP from GitHub: {e}")
+    return None
+
 def main():
     # Change to the script's directory
     import os
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
     
     # Get server host and port from command line args or use defaults
-    server_host = sys.argv[1] if len(sys.argv) > 1 else '10.121.112.164'
+    server_host = sys.argv[1] if len(sys.argv) > 1 else None
     server_port = int(sys.argv[2]) if len(sys.argv) > 2 else 8765
+    
+    # If no host provided, try to fetch from GitHub
+    if not server_host:
+        server_host = get_server_ip_from_github()
+        if not server_host:
+            # Fallback to localhost if GitHub fetch fails
+            server_host = 'localhost'
+            print("Using localhost as fallback")
 
     print(f"Starting Computer Manager Client Agent...")
     print(f"Connecting to: {server_host}:{server_port}")
