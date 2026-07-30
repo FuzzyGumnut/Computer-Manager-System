@@ -625,15 +625,20 @@ class ServerGUI(QMainWindow):
             req = urllib.request.Request(url)
             req.add_header("Authorization", f"token {token}")
             req.add_header("Accept", "application/vnd.github.v3+json")
+            req.add_header("User-Agent", "Computer-Manager-System")
             
+            sha = None
             try:
                 response = urllib.request.urlopen(req)
                 data = json.loads(response.read().decode('utf-8'))
                 sha = data.get('sha')
+                print(f"File exists, SHA: {sha}")
             except urllib.error.HTTPError as e:
                 if e.code == 404:
+                    print("File does not exist yet, will create new")
                     sha = None
                 else:
+                    print(f"HTTP Error checking file: {e.code} - {e.reason}")
                     raise
 
             # Prepare the update
@@ -649,17 +654,33 @@ class ServerGUI(QMainWindow):
                 update_data["sha"] = sha
 
             # Send the update
-            req = urllib.request.Request(url, data=json.dumps(update_data).encode('utf-8'))
+            req = urllib.request.Request(url, data=json.dumps(update_data).encode('utf-8'), method='PUT')
             req.add_header("Authorization", f"token {token}")
             req.add_header("Content-Type", "application/json")
+            req.add_header("User-Agent", "Computer-Manager-System")
             
+            print(f"Sending update request to GitHub...")
             response = urllib.request.urlopen(req)
+            print(f"Response status: {response.status}")
             
             self.status_label.setText(f"Updated GitHub IP to: {local_ip}")
             self.status_label.setStyleSheet("color: #22c55e; padding: 10px;")
             
+        except urllib.error.HTTPError as e:
+            error_msg = f"HTTP Error {e.code}: {e.reason}"
+            print(f"GitHub API Error: {error_msg}")
+            # Try to read error response
+            try:
+                error_body = e.read().decode('utf-8')
+                print(f"Error details: {error_body}")
+            except:
+                pass
+            self.status_label.setText(f"Error: {error_msg}")
+            self.status_label.setStyleSheet("color: #ef4444; padding: 10px;")
         except Exception as e:
-            self.status_label.setText(f"Error updating GitHub: {str(e)}")
+            error_msg = str(e)
+            print(f"Unexpected error: {error_msg}")
+            self.status_label.setText(f"Error: {error_msg}")
             self.status_label.setStyleSheet("color: #ef4444; padding: 10px;")
 
 
