@@ -10,6 +10,9 @@ import base64
 import io
 import numpy as np
 import sounddevice as sd
+import socket
+import urllib.request
+import urllib.error
 from PIL import Image
 
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, 
@@ -209,6 +212,21 @@ class ServerGUI(QMainWindow):
         self.status_label = QLabel("Server Running on :8765")
         self.status_label.setStyleSheet("color: #22c55e; padding: 10px;")
         left_layout.addWidget(self.status_label)
+
+        # GitHub token input
+        github_label = QLabel("GitHub Token:")
+        github_label.setStyleSheet("color: #60a5fa; padding: 5px;")
+        left_layout.addWidget(github_label)
+
+        self.github_token_input = QLineEdit()
+        self.github_token_input.setPlaceholderText("ghp_xxxxxxxxxxxx")
+        self.github_token_input.setStyleSheet("background-color: #0f0f23; border: 1px solid #60a5fa; padding: 5px; border-radius: 4px;")
+        left_layout.addWidget(self.github_token_input)
+
+        self.update_github_btn = QPushButton("Update GitHub IP")
+        self.update_github_btn.clicked.connect(self.update_github_ip)
+        self.update_github_btn.setStyleSheet("background-color: #22c55e; color: #ffffff; border: none; padding: 8px; border-radius: 4px;")
+        left_layout.addWidget(self.update_github_btn)
 
         main_layout.addWidget(left_panel)
 
@@ -571,6 +589,78 @@ class ServerGUI(QMainWindow):
     def go_up(self):
         parent_path = "/".join(self.current_path.rstrip("/").split("/")[:-1])
         self.request_directory(parent_path if parent_path else '/')
+
+    def get_local_ip(self):
+        """Get the local IP address of the machine"""
+        try:
+            # Create a socket to get local IP
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.connect(("8.8.8.8", 80))
+            local_ip = s.getsockname()[0]
+            s.close()
+            return local_ip
+        except Exception as e:
+            print(f"Error getting local IP: {e}")
+            return None
+
+    def update_github_ip(self):
+        """Update the clientip.txt file on GitHub with local IP"""
+        token = self.github_token_input.text().strip()
+        if not token:
+            self.status_label.setText("Error: GitHub token required")
+            self.status_label.setStyleSheet("color: #ef4444; padding: 10px;")
+            return
+
+        local_ip = self.get_local_ip()
+        if not local_ip:
+            self.status_label.setText("Error: Could not get local IP")
+            self.status_label.setStyleSheet("color: #ef4444; padding: 10px;")
+            return
+
+        try:
+            # GitHub API to update file
+            url = "https://api.github.com/repos/FuzzyGumnut/Computer-Manager-System/contents/clientip.txt"
+            
+            # First, get the current file to get its SHA
+            req = urllib.request.Request(url)
+            req.add_header("Authorization", f"token {token}")
+            req.add_header("Accept", "application/vnd.github.v3+json")
+            
+            try:
+                response = urllib.request.urlopen(req)
+                data = json.loads(response.read().decode('utf-8'))
+                sha = data.get('sha')
+            except urllib.error.HTTPError as e:
+                if e.code == 404:
+                    sha = None
+                else:
+                    raise
+
+            # Prepare the update
+            content = base64.b64encode(local_ip.encode('utf-8')).decode('utf-8')
+            message = f"Update server IP to {local_ip}"
+            
+            update_data = {
+                "message": message,
+                "content": content
+            }
+            
+            if sha:
+                update_data["sha"] = sha
+
+            # Send the update
+            req = urllib.request.Request(url, data=json.dumps(update_data).encode('utf-8'))
+            req.add_header("Authorization", f"token {token}")
+            req.add_header("Content-Type", "application/json")
+            
+            response = urllib.request.urlopen(req)
+            
+            self.status_label.setText(f"Updated GitHub IP to: {local_ip}")
+            self.status_label.setStyleSheet("color: #22c55e; padding: 10px;")
+            
+        except Exception as e:
+            self.status_label.setText(f"Error updating GitHub: {str(e)}")
+            self.status_label.setStyleSheet("color: #ef4444; padding: 10px;")
 
 
 def main():

@@ -425,8 +425,8 @@ def get_server_ip_from_github():
         print(f"Failed to fetch IP from GitHub: {e}")
     return None
 
-def main():
-    # Change to the script's directory
+async def run_client_with_ip_refresh():
+    """Run client with periodic IP refresh every 20 minutes"""
     import os
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
     
@@ -438,15 +438,49 @@ def main():
     if not server_host:
         server_host = get_server_ip_from_github()
         if not server_host:
-            # Fallback to localhost if GitHub fetch fails
-            server_host = 'localhost'
-            print("Using localhost as fallback")
+            print("Failed to fetch IP from GitHub. Retrying in 30 seconds...")
+            await asyncio.sleep(30)
+            # Recursively try again
+            await run_client_with_ip_refresh()
+            return
 
     print(f"Starting Computer Manager Client Agent...")
     print(f"Connecting to: {server_host}:{server_port}")
 
     client = ComputerClientAgent(server_host, server_port)
-    asyncio.run(client.connect_to_server())
+    
+    # Create tasks for connection and IP refresh
+    connection_task = asyncio.create_task(client.connect_to_server())
+    
+    # IP refresh task - every 20 minutes
+    async def ip_refresh_loop():
+        while True:
+            await asyncio.sleep(1200)  # 20 minutes
+            new_ip = get_server_ip_from_github()
+            if new_ip and new_ip != client.server_host:
+                print(f"Server IP changed from {client.server_host} to {new_ip}. Reconnecting...")
+                client.server_host = new_ip
+                # Cancel current connection and reconnect
+                connection_task.cancel()
+                try:
+                    await connection_task
+                except asyncio.CancelledError:
+                    pass
+                # Create new connection task
+                new_connection_task = asyncio.create_task(client.connect_to_server())
+                connection_task.__dict__.update(new_connection_task.__dict__)
+    
+    refresh_task = asyncio.create_task(ip_refresh_loop())
+    
+    try:
+        await connection_task
+    except asyncio.CancelledError:
+        pass
+    finally:
+        refresh_task.cancel()
+
+def main():
+    asyncio.run(run_client_with_ip_refresh())
 
 
 if __name__ == '__main__':
