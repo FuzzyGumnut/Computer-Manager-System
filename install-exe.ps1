@@ -68,7 +68,7 @@ Write-Host "Creating startup script..." -ForegroundColor Yellow
 $startupScript = @"
 @echo off
 cd /d "%installDir%"
-start "" /MIN client.exe localhost 8765
+start "" /MIN client.exe 10.121.112.164 8765
 "@
 $startupScript | Out-File "$installDir\start-client-hidden.bat" -Encoding ASCII
 Write-Host "Startup script created" -ForegroundColor Green

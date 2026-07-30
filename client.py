@@ -417,7 +417,7 @@ def main():
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
     
     # Get server host and port from command line args or use defaults
-    server_host = sys.argv[1] if len(sys.argv) > 1 else 'localhost'
+    server_host = sys.argv[1] if len(sys.argv) > 1 else '10.121.112.164'
     server_port = int(sys.argv[2]) if len(sys.argv) > 2 else 8765
 
     print(f"Starting Computer Manager Client Agent...")

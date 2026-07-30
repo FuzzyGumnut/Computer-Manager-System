@@ -374,7 +374,7 @@ class ServerGUI(QMainWindow):
         main_layout.addWidget(self.tab_widget)
 
     def setup_server(self):
-        self.server_thread = WebSocketServerThread()
+        self.server_thread = WebSocketServerThread(host='10.121.112.164', port=8765)
         self.server_thread.message_received.connect(self.handle_client_message)
         self.server_thread.client_connected.connect(self.on_client_connected)
         self.server_thread.client_disconnected.connect(self.on_client_disconnected)
